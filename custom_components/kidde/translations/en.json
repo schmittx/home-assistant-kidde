@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "The desired account is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid credentials",
+            "unknown": "Unknown error",
+            "update_failed": "Update failed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Enter the email address and password associated with your account.",
+                "title": "Login to Kidde account"
+            },
+            "locations": {
+                "data": {
+                    "locations": "Locations"
+                },
+                "description": "Select the desired location(s) to configure.",
+                "title": "Select location(s)"
+            },
+            "devices": {
+                "data": {
+                    "devices": "Devices"
+                },
+                "description": "Location: {location_name}\n\nA new device entry and all applicable entities will be created within Home Assistant for each selected device. Individual entities can then be disabled as desired.",
+                "title": "Select device(s) within the location"
+            },
+            "advanced": {
+                "data": {
+                    "save_responses": "Save server responses to custom_components/kidde/api/responses",
+                    "scan_interval": "Polling interval (seconds)",
+                    "timeout": "Polling timeout (seconds)"
+                },
+                "description": "Server responses can be saved to a file for debugging and development support.\n\nPolling interval and timeout can be adjusted if errors are encountered.",
+                "title": "Advanced options"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "locations": {
+                "data": {
+                    "locations": "Locations"
+                },
+                "description": "Select the desired location(s) to configure.",
+                "title": "Select location(s)"
+            },
+            "devices": {
+                "data": {
+                    "devices": "Devices"
+                },
+                "description": "Location: {location_name}\n\nA new device entry and all applicable entities will be created within Home Assistant for each selected device. Individual entities can then be disabled as desired.\n\nDeselecting a device will delete that device entry and all associated entities.",
+                "title": "Select device(s) within the location"
+            },
+            "advanced": {
+                "data": {
+                    "save_responses": "Save server responses to custom_components/kidde/api/responses",
+                    "scan_interval": "Polling interval (seconds)",
+                    "timeout": "Polling timeout (seconds)"
+                },
+                "description": "Server responses can be saved to a file for debugging and development support.\n\nPolling interval and timeout can be adjusted if errors are encountered.",
+                "title": "Advanced options"
+            }
+        }
+    }
+}
