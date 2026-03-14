@@ -36,15 +36,9 @@ from .const import (
     CONF_TIMEOUT,
     DATA_COORDINATOR,
     DEFAULT_SAVE_RESPONSES,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
     DOMAIN,
-    MAX_SCAN_INTERVAL,
-    MAX_TIMEOUT,
-    MIN_SCAN_INTERVAL,
-    MIN_TIMEOUT,
-    STEP_SCAN_INTERVAL,
-    STEP_TIMEOUT,
+    ScanInterval,
+    Timeout,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -237,20 +231,20 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SAVE_RESPONSES, default=DEFAULT_SAVE_RESPONSES
                     ): BooleanSelector(),
                     vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                        CONF_SCAN_INTERVAL, default=ScanInterval.DEFAULT
                     ): NumberSelector(
                         NumberSelectorConfig(
-                            min=MIN_SCAN_INTERVAL,
-                            max=MAX_SCAN_INTERVAL,
-                            step=STEP_SCAN_INTERVAL,
+                            min=ScanInterval.MIN,
+                            max=ScanInterval.MAX,
+                            step=ScanInterval.STEP,
                             unit_of_measurement=UnitOfTime.SECONDS,
                         )
                     ),
-                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
+                    vol.Optional(CONF_TIMEOUT, default=Timeout.DEFAULT): NumberSelector(
                         NumberSelectorConfig(
-                            min=MIN_TIMEOUT,
-                            max=MAX_TIMEOUT,
-                            step=STEP_TIMEOUT,
+                            min=Timeout.MIN,
+                            max=Timeout.MAX,
+                            step=Timeout.STEP,
                             unit_of_measurement=UnitOfTime.SECONDS,
                         )
                     ),
@@ -401,10 +395,10 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
             self.data.get(CONF_SAVE_RESPONSES, DEFAULT_SAVE_RESPONSES),
         )
         conf_scan_interval = self.options.get(
-            CONF_SCAN_INTERVAL, self.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            CONF_SCAN_INTERVAL, self.data.get(CONF_SCAN_INTERVAL, ScanInterval.DEFAULT)
         )
         conf_timeout = self.options.get(
-            CONF_TIMEOUT, self.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+            CONF_TIMEOUT, self.data.get(CONF_TIMEOUT, Timeout.DEFAULT)
         )
 
         return self.async_show_form(
@@ -418,17 +412,17 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL, default=conf_scan_interval
                     ): NumberSelector(
                         NumberSelectorConfig(
-                            min=MIN_SCAN_INTERVAL,
-                            max=MAX_SCAN_INTERVAL,
-                            step=STEP_SCAN_INTERVAL,
+                            min=ScanInterval.MIN,
+                            max=ScanInterval.MAX,
+                            step=ScanInterval.STEP,
                             unit_of_measurement=UnitOfTime.SECONDS,
                         )
                     ),
                     vol.Optional(CONF_TIMEOUT, default=conf_timeout): NumberSelector(
                         NumberSelectorConfig(
-                            min=MIN_TIMEOUT,
-                            max=MAX_TIMEOUT,
-                            step=STEP_TIMEOUT,
+                            min=Timeout.MIN,
+                            max=Timeout.MAX,
+                            step=Timeout.STEP,
                             unit_of_measurement=UnitOfTime.SECONDS,
                         )
                     ),

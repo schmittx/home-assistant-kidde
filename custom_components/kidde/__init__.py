@@ -30,11 +30,11 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_SAVE_LOCATION,
     DEFAULT_SAVE_RESPONSES,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
     DEVICE_MANUFACTURER,
     DOMAIN,
     UNDO_UPDATE_LISTENER,
+    ScanInterval,
+    Timeout,
 )
 
 PLATFORMS = (Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH)
@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """
         try:
             async with timeout(
-                options.get(CONF_TIMEOUT, data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT))
+                options.get(CONF_TIMEOUT, data.get(CONF_TIMEOUT, Timeout.DEFAULT))
             ):
                 return await api.update(target_locations=conf_locations)
         except KiddeAPIAuthError as exception:
@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name=f"Kidde ({data[CONF_EMAIL]})",
         update_method=async_update_data,
         update_interval=timedelta(
-            seconds=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            seconds=options.get(CONF_SCAN_INTERVAL, ScanInterval.DEFAULT)
         ),
     )
     await coordinator.async_refresh()
