@@ -8,7 +8,7 @@ Custom component to allow control of [Kidde devices](https://www.kidde.com/produ
 - Currently, only the 30CUAR-W model has been confirmed to work with this integration.
 
 ## Install
-1. Ensure Home Assistant is updated to version 2025.12.0 or newer.
+1. Ensure Home Assistant is updated to version 2026.3.0 or newer.
 2. Use HACS and add as a [custom repo](https://hacs.xyz/docs/faq/custom_repositories); or download and manually move to the `custom_components` folder.
 3. Once the integration is installed follow the standard process to setup via UI and search for `Kidde`.
 4. Follow the prompts.
