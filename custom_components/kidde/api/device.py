@@ -40,8 +40,12 @@ class Device:
     @property
     def model(self) -> str | None:
         """Model."""
-        model = self.data.get("model", MODEL_UNKNOWN)
-        return MODEL_MAP.get(model, model)
+        return self.data.get("model")
+
+    @property
+    def model_name(self) -> str | None:
+        """Model name."""
+        return MODEL_MAP.get(self.model, MODEL_UNKNOWN) if self.model else None
 
     @property
     def location_id(self) -> int | None:

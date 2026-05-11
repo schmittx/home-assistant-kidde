@@ -4,7 +4,7 @@ Custom component to allow control of [Kidde devices](https://www.kidde.com/produ
 
 ## Features
 - This is a small integration to allow basic monitoring via Home Assistant.
-- `binary_sensor`, `button`, `sensor`, and `switch` entities will be created for each device.
+- `binary_sensor`, `button`, `sensor`, `switch`, and `update` entities will be created for each device.
 - Currently, only the 30CUAR-W model has been confirmed to work with this integration.
 
 ## Install

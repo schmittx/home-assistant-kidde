@@ -26,8 +26,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .api import KiddeAPI, KiddeAPIAuthError
-from .api.location import Location as KiddeLocation
+from .api import KiddeAPI, KiddeAPIAuthError, KiddeAPIData
 from .const import (
     CONF_COOKIES,
     CONF_DEVICES,
@@ -55,7 +54,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.api: KiddeAPI = KiddeAPI()
         self.index = 0
-        self.response: list[KiddeLocation] = []
+        self.response: KiddeAPIData = KiddeAPIData()
         self.user_input: dict[str, Any] = {}
 
     @property
@@ -125,14 +124,16 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.user_input[CONF_LOCATIONS] = []
 
-            for location in self.response:
+            for location in self.response.locations:
                 if location.label_long in user_input[CONF_LOCATIONS]:
                     self.user_input[CONF_LOCATIONS].append(location.id)
 
             return await self.async_step_devices()
 
         location_names = [
-            location.label_long for location in self.response if location.label_long
+            location.label_long
+            for location in self.response.locations
+            if location.label_long
         ]
 
         if not location_names:
@@ -165,7 +166,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.user_input.get(CONF_DEVICES):
                 self.user_input[CONF_DEVICES] = []
 
-            for location in self.response:
+            for location in self.response.locations:
                 if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                     for device in location.devices:
                         if device.label in user_input[CONF_DEVICES]:
@@ -180,7 +181,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.config_title, data=self.user_input
             )
 
-        for location in self.response:
+        for location in self.response.locations:
             if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                 device_names = [
                     device.label for device in location.devices if device.label
@@ -265,8 +266,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self) -> None:
         """Initialize Kidde options flow."""
         self.coordinator = None
-        self.coordinator_data: list[KiddeLocation] = []
-        self.index = 0
+        self.coordinator_data: KiddeAPIData = KiddeAPIData()
         self.user_input = {}
 
     @property
@@ -292,20 +292,20 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.user_input[CONF_LOCATIONS] = [
                 location.id
-                for location in self.coordinator_data
+                for location in self.coordinator_data.locations
                 if location.label_long in user_input[CONF_LOCATIONS]
             ]
             return await self.async_step_devices()
 
         conf_locations = [
             location.label_long
-            for location in self.coordinator_data
+            for location in self.coordinator_data.locations
             if location.id
             in self.options.get(CONF_LOCATIONS, self.data[CONF_LOCATIONS])
         ]
         location_names = [
             location.label_long
-            for location in self.coordinator_data
+            for location in self.coordinator_data.locations
             if location.label_long
         ]
 
@@ -330,7 +330,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_devices(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            for location in self.coordinator_data:
+            for location in self.coordinator_data.locations:
                 if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                     self.user_input[CONF_DEVICES].extend(
                         [
@@ -348,7 +348,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
         if self.index == 0:
             self.user_input[CONF_DEVICES] = []
 
-        for location in self.coordinator_data:
+        for location in self.coordinator_data.locations:
             if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                 conf_devices = [
                     device.label

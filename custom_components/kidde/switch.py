@@ -48,7 +48,7 @@ async def async_setup_entry(
     coordinator = entry[DATA_COORDINATOR]
     entities: list[KiddeSwitchEntity] = []
 
-    for location in coordinator.data:
+    for location in coordinator.data.locations:
         if location.id in entry[CONF_LOCATIONS]:
             for device in location.devices:
                 if device.id in entry[CONF_DEVICES]:

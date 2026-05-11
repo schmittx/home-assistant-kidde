@@ -2,28 +2,34 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+from enum import StrEnum
 from http import HTTPMethod
 import json
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import aiofiles
 import aiohttp
 
+from .firmware import Firmware
 from .location import Location
 
 _LOGGER = logging.getLogger(__name__)
 
-API_PREFIX = "https://api.homesafe.kidde.com/api/v4"
+API_PREFIX = "https://api.homesafe.kidde.com/api"
 
 
-class KiddeAPIAuthError(Exception):
-    """Exception to indicate an authentication error."""
+class APIVersion(StrEnum):
+    """API version."""
+
+    V4 = "v4"
+    V5 = "v5"
 
 
 class KiddeAPI:
-    """KiddeAPI."""
+    """Kidde API."""
 
     def __init__(
         self,
@@ -40,7 +46,9 @@ class KiddeAPI:
         path = "auth/login"
         payload = {"email": email, "password": password}
         async with aiohttp.request(
-            method=HTTPMethod.POST, url=f"{API_PREFIX}/{path}", json=payload
+            method=HTTPMethod.POST,
+            url=f"{API_PREFIX}/{APIVersion.V4}/{path}",
+            json=payload,
         ) as response:
             if response.status == 403:
                 raise KiddeAPIAuthError
@@ -52,12 +60,13 @@ class KiddeAPI:
 
     async def call(
         self,
-        method: Literal[HTTPMethod.GET, HTTPMethod.PATCH, HTTPMethod.POST],
+        method: HTTPMethod,
+        api_version: APIVersion,
         path: str,
         payload: dict[str, Any] | None = None,
     ) -> Any:
         """Make a request."""
-        url = f"{API_PREFIX}/{path}"
+        url = f"{API_PREFIX}/{api_version}/{path}"
         if payload is None:
             payload = {}
         async with aiohttp.request(
@@ -95,10 +104,19 @@ class KiddeAPI:
     async def update(
         self,
         target_locations: list[int] | None = None,
-    ) -> list[Location]:
+    ) -> KiddeAPIData:
         """Update."""
-        data = []
-        locations = await self.call(method=HTTPMethod.GET, path="location")
+        data = defaultdict(list)
+        firmwares = await self.call(
+            method=HTTPMethod.GET, api_version=APIVersion.V5, path="firmware"
+        )
+        if firmwares and isinstance(firmwares, list):
+            for firmware in firmwares:
+                if firmware and isinstance(firmware, dict):
+                    data["firmware"].append(Firmware(self, firmware))
+        locations = await self.call(
+            method=HTTPMethod.GET, api_version=APIVersion.V4, path="location"
+        )
         if locations and isinstance(locations, list):
             for location in locations:
                 if location and isinstance(location, dict):
@@ -110,12 +128,38 @@ class KiddeAPI:
                         ]
                     ):
                         location["devices"] = await self.call(
-                            method=HTTPMethod.GET, path=f"location/{location_id}/device"
+                            method=HTTPMethod.GET,
+                            api_version=APIVersion.V4,
+                            path=f"location/{location_id}/device",
                         )
                         events = await self.call(
-                            method=HTTPMethod.GET, path=f"location/{location_id}/event"
+                            method=HTTPMethod.GET,
+                            api_version=APIVersion.V5,
+                            path=f"location/{location_id}/event",
                         )
                         if events and isinstance(events, dict):
                             location["events"] = events.get("events")
-                        data.append(Location(self, location))
-        return data
+                        data["locations"].append(Location(self, location))
+        return KiddeAPIData(data)
+
+
+class KiddeAPIAuthError(Exception):
+    """Exception to indicate an authentication error."""
+
+
+class KiddeAPIData:
+    """Kidde API Data."""
+
+    def __init__(self, data: dict[str, Any] | None = None) -> None:
+        """Initialize."""
+        self.data = data if data is not None else {}
+
+    @property
+    def locations(self) -> list[Location]:
+        """Locations."""
+        return self.data.get("locations", [])
+
+    @property
+    def firmware(self) -> list[Firmware]:
+        """Firmware."""
+        return self.data.get("firmware", [])

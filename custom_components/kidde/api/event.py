@@ -43,6 +43,31 @@ class Event:
         return self.data.get("user_name")
 
     @property
+    def device_id(self) -> int | None:
+        """Device ID."""
+        return self.data.get("device_id")
+
+    @property
+    def device_label(self) -> str | None:
+        """Device label."""
+        return self.data.get("device_label")
+
+    @property
+    def device_model(self) -> str | None:
+        """Device model."""
+        return self.data.get("device_model")
+
+    @property
+    def resolved(self) -> str | None:
+        """Resolved."""
+        return self.data.get("resolved")
+
+    @property
     def can_delete(self) -> bool | None:
         """User name."""
         return self.data.get("can_delete")
+
+    @property
+    def silenced(self) -> bool | None:
+        """Silenced."""
+        return self.data.get("silenced")

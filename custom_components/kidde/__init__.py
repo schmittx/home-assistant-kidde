@@ -18,8 +18,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import KiddeAPI, KiddeAPIAuthError
+from .api import KiddeAPI, KiddeAPIAuthError, KiddeAPIData
 from .api.device import Device as KiddeDevice
+from .api.firmware import Firmware as KiddeFirmware
 from .api.location import Location as KiddeLocation
 from .const import (
     CONF_COOKIES,
@@ -37,7 +38,13 @@ from .const import (
     Timeout,
 )
 
-PLATFORMS = (Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH)
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         else None,
     )
 
-    async def async_update_data() -> list[KiddeLocation]:
+    async def async_update_data() -> KiddeAPIData:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -151,9 +158,11 @@ class KiddeEntity(CoordinatorEntity):
     @property
     def location(self) -> KiddeLocation | None:
         """Return a KiddeLocation object."""
-        data: list[KiddeLocation] = self.coordinator.data  # pyright: ignore[reportAssignmentType]
-        systems = {system.id: system for system in data}
-        return systems.get(self.location_id)
+        locations = {
+            location.id: location
+            for location in self.coordinator.data.locations  # pyright: ignore[reportAttributeAccessIssue]
+        }
+        return locations.get(self.location_id)
 
     @property
     def device(self) -> KiddeDevice | None:
@@ -166,6 +175,17 @@ class KiddeEntity(CoordinatorEntity):
         return devices.get(self.device_id)
 
     @property
+    def firmware(self) -> KiddeFirmware | None:
+        """Return a KiddeDevice object."""
+        if self.device:
+            firmware = {
+                firmware.model: firmware
+                for firmware in self.coordinator.data.firmware  # pyright: ignore[reportAttributeAccessIssue]
+            }
+            return firmware.get(self.device.model)
+        return None
+
+    @property
     def device_info(self) -> dr.DeviceInfo | None:
         """Return device specific attributes.
 
@@ -176,7 +196,7 @@ class KiddeEntity(CoordinatorEntity):
                 hw_version=self.device.alarm_version,
                 identifiers={(DOMAIN, str(self.device.id))},
                 manufacturer=DEVICE_MANUFACTURER,
-                model=self.device.model,
+                model=self.device.model_name,
                 name=self.device.label,
                 serial_number=self.device.serial_number,
                 suggested_area=self.device.announcement,
