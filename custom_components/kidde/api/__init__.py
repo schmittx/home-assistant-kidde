@@ -61,8 +61,8 @@ class KiddeAPI:
     async def call(
         self,
         method: HTTPMethod,
-        api_version: APIVersion,
         path: str,
+        api_version: APIVersion = APIVersion.V4,
         payload: dict[str, Any] | None = None,
     ) -> Any:
         """Make a request."""
@@ -108,15 +108,13 @@ class KiddeAPI:
         """Update."""
         data = defaultdict(list)
         firmwares = await self.call(
-            method=HTTPMethod.GET, api_version=APIVersion.V5, path="firmware"
+            method=HTTPMethod.GET, path="firmware", api_version=APIVersion.V5
         )
         if firmwares and isinstance(firmwares, list):
             for firmware in firmwares:
                 if firmware and isinstance(firmware, dict):
                     data["firmware"].append(Firmware(self, firmware))
-        locations = await self.call(
-            method=HTTPMethod.GET, api_version=APIVersion.V4, path="location"
-        )
+        locations = await self.call(method=HTTPMethod.GET, path="location")
         if locations and isinstance(locations, list):
             for location in locations:
                 if location and isinstance(location, dict):
@@ -129,13 +127,12 @@ class KiddeAPI:
                     ):
                         location["devices"] = await self.call(
                             method=HTTPMethod.GET,
-                            api_version=APIVersion.V4,
                             path=f"location/{location_id}/device",
                         )
                         events = await self.call(
                             method=HTTPMethod.GET,
-                            api_version=APIVersion.V5,
                             path=f"location/{location_id}/event",
+                            api_version=APIVersion.V5,
                         )
                         if events and isinstance(events, dict):
                             location["events"] = events.get("events")
