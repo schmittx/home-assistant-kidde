@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 f"{type(exception).__name__} while communicating with API: {exception}"
             ) from exception
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = KiddeDataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
         name=f"Kidde ({data[CONF_EMAIL]})",
@@ -138,12 +138,22 @@ async def async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) 
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-class KiddeEntity(CoordinatorEntity):
+class KiddeDataUpdateCoordinator(DataUpdateCoordinator[KiddeAPIData]):
+    """Class to manage fetching data from single endpoint."""
+
+    async def _async_update_data(self) -> KiddeAPIData:
+        """Fetch the latest data from the source."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
+        return await self.update_method()
+
+
+class KiddeEntity(CoordinatorEntity[KiddeDataUpdateCoordinator]):
     """Representation of a Kidde entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: KiddeDataUpdateCoordinator,
         location_id: int,
         device_id: int,
         entity_description: EntityDescription | None = None,
@@ -159,8 +169,7 @@ class KiddeEntity(CoordinatorEntity):
     def location(self) -> KiddeLocation | None:
         """Return a KiddeLocation object."""
         locations = {
-            location.id: location
-            for location in self.coordinator.data.locations  # pyright: ignore[reportAttributeAccessIssue]
+            location.id: location for location in self.coordinator.data.locations
         }
         return locations.get(self.location_id)
 
@@ -179,8 +188,7 @@ class KiddeEntity(CoordinatorEntity):
         """Return a KiddeDevice object."""
         if self.device:
             firmware = {
-                firmware.model: firmware
-                for firmware in self.coordinator.data.firmware  # pyright: ignore[reportAttributeAccessIssue]
+                firmware.model: firmware for firmware in self.coordinator.data.firmware
             }
             return firmware.get(self.device.model)
         return None
