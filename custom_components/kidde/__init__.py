@@ -1,7 +1,5 @@
 """The Kidde integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from datetime import timedelta
 import logging
@@ -37,6 +35,7 @@ from .const import (
     ScanInterval,
     Timeout,
 )
+from .util import generate_device_identifier
 
 PLATFORMS = (
     Platform.BINARY_SENSOR,
@@ -56,7 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     conf_locations = options.get(CONF_LOCATIONS, data.get(CONF_LOCATIONS, []))
     conf_devices = options.get(CONF_DEVICES, data.get(CONF_DEVICES, []))
-    conf_identifiers = [(DOMAIN, conf_id) for conf_id in conf_locations + conf_devices]
+    conf_identifiers = [
+        generate_device_identifier(conf_id) for conf_id in conf_locations + conf_devices
+    ]
 
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(
@@ -199,10 +200,10 @@ class KiddeEntity(CoordinatorEntity[KiddeDataUpdateCoordinator]):
 
         Implemented by platform classes.
         """
-        if self.device:
+        if self.device and self.device.id:
             return dr.DeviceInfo(
                 hw_version=self.device.alarm_version,
-                identifiers={(DOMAIN, str(self.device.id))},
+                identifiers={generate_device_identifier(self.device.id)},
                 manufacturer=DEVICE_MANUFACTURER,
                 model=self.device.model_name,
                 name=self.device.label,

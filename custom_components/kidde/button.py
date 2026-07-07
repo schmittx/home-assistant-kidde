@@ -1,7 +1,5 @@
 """Support for Kidde button entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.button import (

@@ -1,4 +1,4 @@
-"""Adds config flow for Kidde integration."""
+"""Adds config flow for the Kidde integration."""
 
 import logging
 from types import MappingProxyType
