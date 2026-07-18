@@ -8,6 +8,7 @@ CONF_SAVE_RESPONSES = "save_responses"
 CONF_LOCATIONS = "locations"
 CONF_TIMEOUT = "timeout"
 
+DATA_API = "api"
 DATA_COORDINATOR = "coordinator"
 
 DOMAIN = "kidde"
@@ -18,6 +19,8 @@ DEFAULT_SAVE_LOCATION = f"/config/custom_components/{DOMAIN}/api/responses"
 DEFAULT_SAVE_RESPONSES = False
 
 DEVICE_MANUFACTURER = "Kidde"
+
+REQUEST_REFRESH_DELAY = 2.0
 
 
 class ScanInterval(IntEnum):

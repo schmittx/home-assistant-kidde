@@ -9,6 +9,7 @@ from homeassistant.const import CONF_EMAIL, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,11 +27,13 @@ from .const import (
     CONF_LOCATIONS,
     CONF_SAVE_RESPONSES,
     CONF_TIMEOUT,
+    DATA_API,
     DATA_COORDINATOR,
     DEFAULT_SAVE_LOCATION,
     DEFAULT_SAVE_RESPONSES,
     DEVICE_MANUFACTURER,
     DOMAIN,
+    REQUEST_REFRESH_DELAY,
     UNDO_UPDATE_LISTENER,
     ScanInterval,
     Timeout,
@@ -42,6 +45,7 @@ PLATFORMS = (
     Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
 )
 
@@ -100,10 +104,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = KiddeDataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
+        config_entry=config_entry,
         name=f"Kidde ({data[CONF_EMAIL]})",
-        update_method=async_update_data,
         update_interval=timedelta(
             seconds=options.get(CONF_SCAN_INTERVAL, ScanInterval.DEFAULT)
+        ),
+        update_method=async_update_data,
+        request_refresh_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
         ),
     )
     await coordinator.async_refresh()
@@ -112,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONF_LOCATIONS: conf_locations,
         CONF_DEVICES: conf_devices,
+        DATA_API: api,
         DATA_COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: config_entry.add_update_listener(async_update_listener),
     }

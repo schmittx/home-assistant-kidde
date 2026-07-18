@@ -1,7 +1,5 @@
 """Kidde API."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from enum import StrEnum
 from http import HTTPMethod

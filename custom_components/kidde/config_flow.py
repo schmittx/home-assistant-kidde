@@ -33,7 +33,7 @@ from .const import (
     CONF_LOCATIONS,
     CONF_SAVE_RESPONSES,
     CONF_TIMEOUT,
-    DATA_COORDINATOR,
+    DATA_API,
     DEFAULT_SAVE_RESPONSES,
     DOMAIN,
     ScanInterval,
@@ -53,7 +53,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.api: KiddeAPI = KiddeAPI()
-        self.index = 0
+        self.index: int = 0
         self.response: KiddeAPIData = KiddeAPIData()
         self.user_input: dict[str, Any] = {}
 
@@ -265,9 +265,10 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self) -> None:
         """Initialize Kidde options flow."""
-        self.coordinator = None
-        self.coordinator_data: KiddeAPIData = KiddeAPIData()
-        self.user_input = {}
+        self.api = KiddeAPI()
+        self.index: int = 0
+        self.response: KiddeAPIData = KiddeAPIData()
+        self.user_input: dict[str, Any] = {}
 
     @property
     def data(self) -> MappingProxyType[str, Any]:
@@ -279,12 +280,16 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
         """Return the options from a config entry."""
         return self.config_entry.options
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, errors):
         """Manage the options."""
-        self.coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id][
-            DATA_COORDINATOR
-        ]
-        self.coordinator_data = self.coordinator.data
+        config_entry = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.api = config_entry[DATA_API]
+        try:
+            self.response = await self.api.update(
+                target_locations=config_entry[CONF_LOCATIONS]
+            )
+        except KiddeAPIAuthError:
+            errors["base"] = "update_failed"
         return await self.async_step_locations()
 
     async def async_step_locations(self, user_input=None):
@@ -292,20 +297,20 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.user_input[CONF_LOCATIONS] = [
                 location.id
-                for location in self.coordinator_data.locations
+                for location in self.response.locations
                 if location.label_long in user_input[CONF_LOCATIONS]
             ]
             return await self.async_step_devices()
 
         conf_locations = [
             location.label_long
-            for location in self.coordinator_data.locations
+            for location in self.response.locations
             if location.id
             in self.options.get(CONF_LOCATIONS, self.data[CONF_LOCATIONS])
         ]
         location_names = [
             location.label_long
-            for location in self.coordinator_data.locations
+            for location in self.response.locations
             if location.label_long
         ]
 
@@ -330,7 +335,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_devices(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            for location in self.coordinator_data.locations:
+            for location in self.response.locations:
                 if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                     self.user_input[CONF_DEVICES].extend(
                         [
@@ -348,7 +353,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
         if self.index == 0:
             self.user_input[CONF_DEVICES] = []
 
-        for location in self.coordinator_data.locations:
+        for location in self.response.locations:
             if location.id == self.user_input[CONF_LOCATIONS][self.index]:
                 conf_devices = [
                     device.label

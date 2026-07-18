@@ -62,7 +62,7 @@ class KiddeUpdateEntity(UpdateEntity, KiddeEntity):
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self.device.firmware_version if self.device else None
+        return self.device.alarm_version if self.device else None
 
     @property
     def latest_version(self) -> str | None:

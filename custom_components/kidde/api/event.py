@@ -1,7 +1,5 @@
 """Kidde API."""
 
-from __future__ import annotations
-
 
 class Event:
     """Event."""

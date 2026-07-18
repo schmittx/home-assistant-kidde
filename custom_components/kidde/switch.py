@@ -78,10 +78,12 @@ class KiddeSwitchEntity(SwitchEntity, KiddeEntity):
         """Turn the entity on."""
         if self.device:
             await self.device.set_property(self.entity_description.key, True)
+            self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.device:
             await self.device.set_property(self.entity_description.key, False)
+            self.async_write_ha_state()
             await self.coordinator.async_request_refresh()

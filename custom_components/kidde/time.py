@@ -1,12 +1,9 @@
-"""Support for Kidde button entities."""
+"""Support for Kidde time entities."""
 
 from dataclasses import dataclass
+from datetime import time
 
-from homeassistant.components.button import (
-    ButtonDeviceClass,
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -17,26 +14,20 @@ from .const import CONF_DEVICES, CONF_LOCATIONS, DATA_COORDINATOR, DOMAIN
 
 
 @dataclass(frozen=True)
-class KiddeButtonEntityDescription(ButtonEntityDescription):
-    """Class to describe a Kidde button entity."""
+class KiddeTimeEntityDescription(TimeEntityDescription):
+    """Class to describe a Kidde time entity."""
 
-    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
-BUTTON_DESCRIPTIONS: list[KiddeButtonEntityDescription] = [
-    KiddeButtonEntityDescription(
-        key="hush",
-        name="Hush",
-        entity_category=EntityCategory.CONFIG,
+TIME_DESCRIPTIONS: list[KiddeTimeEntityDescription] = [
+    KiddeTimeEntityDescription(
+        key="no_chirp_on_time",
+        name="No Chirp On Time",
     ),
-    KiddeButtonEntityDescription(
-        key="identify",
-        name="Identify",
-        device_class=ButtonDeviceClass.IDENTIFY,
-    ),
-    KiddeButtonEntityDescription(
-        key="test",
-        name="Test",
+    KiddeTimeEntityDescription(
+        key="no_chirp_off_time",
+        name="No Chirp Off Time",
     ),
 ]
 
@@ -46,37 +37,42 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Kidde button entity based on a config entry."""
+    """Set up a Kidde time entity based on a config entry."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = entry[DATA_COORDINATOR]
-    entities: list[KiddeButtonEntity] = []
+    entities: list[KiddeTimeEntity] = []
 
     for location in coordinator.data.locations:
         if location.id in entry[CONF_LOCATIONS]:
             for device in location.devices:
                 if device.id in entry[CONF_DEVICES]:
                     entities.extend(
-                        KiddeButtonEntity(
+                        KiddeTimeEntity(
                             coordinator=coordinator,
                             location_id=location.id,
                             device_id=device.id,
                             entity_description=description,
                         )
-                        for description in BUTTON_DESCRIPTIONS
+                        for description in TIME_DESCRIPTIONS
                         if hasattr(device, description.key)
                     )
 
     async_add_entities(entities)
 
 
-class KiddeButtonEntity(ButtonEntity, KiddeEntity):
-    """Representation of a Kidde button entity."""
+class KiddeTimeEntity(TimeEntity, KiddeEntity):
+    """Representation of a Kidde time entity."""
 
-    entity_description: KiddeButtonEntityDescription
+    entity_description: KiddeTimeEntityDescription
 
-    async def async_press(self) -> None:
-        """Press the button."""
+    @property
+    def native_value(self) -> time | None:
+        """Return the value reported by the time."""
+        return getattr(self.device, self.entity_description.key)
+
+    async def async_set_value(self, value: time) -> None:
+        """Change the time."""
         if self.device:
-            await getattr(self.device, self.entity_description.key)()
+            await self.device.set_property(self.entity_description.key, value)
             self.async_write_ha_state()
             await self.coordinator.async_request_refresh()

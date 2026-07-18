@@ -1,10 +1,9 @@
 """Kidde API."""
 
-from __future__ import annotations
-
 import datetime
 from enum import StrEnum
 from http import HTTPMethod
+from typing import Any
 
 MODEL_MAP = {
     "EssWFAC": "30CUAR-W",
@@ -155,6 +154,16 @@ class Device:
         return self.data.get("no_chirp_enabled")
 
     @property
+    def no_chirp_off_time(self) -> datetime.time | None:
+        """No chirp off time."""
+        return self._convert_int_to_time(self.data.get("no_chirp_off_time"))
+
+    @property
+    def no_chirp_on_time(self) -> datetime.time | None:
+        """No chirp on time."""
+        return self._convert_int_to_time(self.data.get("no_chirp_on_time"))
+
+    @property
     def notify_contact(self) -> bool | None:
         """Notify contact."""
         return self.data.get("notify_contact")
@@ -164,12 +173,32 @@ class Device:
         """Notify EOL."""
         return self.data.get("notify_eol")
 
-    async def set_property(self, key: str, value: bool) -> None:
+    async def set_property(self, key: str, value: Any) -> None:
         """Set property."""
-        if not isinstance(key, str) or not isinstance(value, bool):
+        if isinstance(value, datetime.time):
+            value = self._convert_time_to_int(value)
+        if not isinstance(key, str) or value is None:
             return
         await self.api.call(
             method=HTTPMethod.PATCH,
             path=f"location/{self.location.id}/device/{self.id}",
             payload={key: value},
         )
+        self.data[key] = value
+
+    def _convert_int_to_time(self, value: int | None) -> datetime.time | None:
+        """Convert int to time."""
+        if value is not None:
+            hours = int(value / 60)
+            minutes = int(value - (hours * 60))
+            return datetime.time(
+                hour=hours,
+                minute=minutes,
+            )
+        return None
+
+    def _convert_time_to_int(self, value: datetime.time | None) -> int | None:
+        """Convert time to int."""
+        if value is not None:
+            return (value.hour * 60) + value.minute
+        return None
