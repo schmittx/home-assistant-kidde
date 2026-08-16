@@ -161,6 +161,8 @@ class KiddeDataUpdateCoordinator(DataUpdateCoordinator[KiddeAPIData]):
 class KiddeEntity(CoordinatorEntity[KiddeDataUpdateCoordinator]):
     """Representation of a Kidde entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: KiddeDataUpdateCoordinator,
@@ -225,10 +227,11 @@ class KiddeEntity(CoordinatorEntity[KiddeDataUpdateCoordinator]):
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        name = self.device.label if self.device else None
-        if description := self.entity_description.name:
-            return f"{name} {description}"
-        return name
+        return (
+            self.entity_description.name
+            if self.entity_description and isinstance(self.entity_description.name, str)
+            else None
+        )
 
     @property
     def unique_id(self) -> str | None:

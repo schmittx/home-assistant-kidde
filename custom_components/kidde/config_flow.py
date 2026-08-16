@@ -102,6 +102,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            last_step=False,
         )
 
     async def async_finish_login(self, errors):
@@ -156,6 +157,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_devices(self, user_input=None):
@@ -175,11 +177,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.index == len(self.user_input[CONF_LOCATIONS]):
             self.index = 0
-            if self.show_advanced_options:
-                return await self.async_step_advanced()
-            return self.async_create_entry(
-                title=self.config_title, data=self.user_input
-            )
+            return await self.async_step_advanced()
 
         for location in self.response.locations:
             if location.id == self.user_input[CONF_LOCATIONS][self.index]:
@@ -211,6 +209,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "location_name": location.label_long or ""
                     },
                     errors=errors,
+                    last_step=False,
                 )
         return None
 
@@ -251,6 +250,7 @@ class KiddeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            last_step=True,
         )
 
     @staticmethod
@@ -330,6 +330,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 }
             ),
+            last_step=False,
         )
 
     async def async_step_devices(self, user_input=None):
@@ -347,9 +348,9 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
                     self.index += 1
 
         if self.index == len(self.user_input[CONF_LOCATIONS]):
-            if self.show_advanced_options:
-                return await self.async_step_advanced()
-            return self.async_create_entry(title="", data=self.user_input)
+            self.index = 0
+            return await self.async_step_advanced()
+
         if self.index == 0:
             self.user_input[CONF_DEVICES] = []
 
@@ -384,6 +385,7 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
                     description_placeholders={
                         "location_name": location.label_long or ""
                     },
+                    last_step=False,
                 )
         return None
 
@@ -433,4 +435,5 @@ class KiddeOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 }
             ),
+            last_step=True,
         )

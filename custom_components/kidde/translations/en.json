@@ -34,8 +34,8 @@
             "advanced": {
                 "data": {
                     "save_responses": "Save server responses to custom_components/kidde/api/responses",
-                    "scan_interval": "Polling interval (seconds)",
-                    "timeout": "Polling timeout (seconds)"
+                    "scan_interval": "Polling interval",
+                    "timeout": "Polling timeout"
                 },
                 "description": "Server responses can be saved to a file for debugging and development support.\n\nPolling interval and timeout can be adjusted if errors are encountered.",
                 "title": "Advanced options"
@@ -61,8 +61,8 @@
             "advanced": {
                 "data": {
                     "save_responses": "Save server responses to custom_components/kidde/api/responses",
-                    "scan_interval": "Polling interval (seconds)",
-                    "timeout": "Polling timeout (seconds)"
+                    "scan_interval": "Polling interval",
+                    "timeout": "Polling timeout"
                 },
                 "description": "Server responses can be saved to a file for debugging and development support.\n\nPolling interval and timeout can be adjusted if errors are encountered.",
                 "title": "Advanced options"
