@@ -61,11 +61,26 @@ class Event:
         return self.data.get("resolved")
 
     @property
+    def resolved_by(self) -> int | None:
+        """Resolved by."""
+        return self.data.get("resolved_by")
+
+    @property
     def can_delete(self) -> bool | None:
         """User name."""
         return self.data.get("can_delete")
 
     @property
+    def capture_type(self) -> str | None:
+        """Capture type."""
+        return self.data.get("capture_type")
+
+    @property
     def silenced(self) -> bool | None:
         """Silenced."""
         return self.data.get("silenced")
+
+    @property
+    def silenced_by(self) -> int | None:
+        """Silenced by."""
+        return self.data.get("silenced_by")
